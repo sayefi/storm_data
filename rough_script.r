@@ -65,10 +65,10 @@ InjuriesByEventTop50<-head(InjuriesByEvent,50)
 # 
 # g<-ggplot(data=InjuriesByEventTop50,aes(x=EVTYPE,y=log10(INJURIES+FATALITIES)))
 # 
-# InjuriesByEventTop50t<-transform(InjuriesByEventTop50,type="Injury",occur=INJURIES)
-# InjuriesByEventTop50t<-rbind(InjuriesByEventTop50t, 
-#                              transform(InjuriesByEventTop50,
-#                                        type="Fatality",occur=FATALITIES))
+InjuriesByEventTop50t<-transform(InjuriesByEventTop50,type="Injury",occur=INJURIES)
+InjuriesByEventTop50t<-rbind(InjuriesByEventTop50t,
+                             transform(InjuriesByEventTop50,
+                                       type="Fatality",occur=FATALITIES))
 
 ## highest number of casualities are caused by Tornado
 
@@ -86,6 +86,59 @@ g<-g+coord_flip()
 print(g)
 
 
+InjuriesByEventTop10<-head(InjuriesByEvent,10)
+
+InjuriesByEventTop10t<-transform(InjuriesByEventTop10,type="Injuries",
+                                 occurances=INJURIES)
+InjuriesByEventTop10t<-rbind(InjuriesByEventTop10t,
+                             transform(InjuriesByEventTop10,
+                                       type="Fatalities",occurances=FATALITIES))
+g<-NULL
+
+##----------------------------------------------------------------------------
+
+g<-ggplot(InjuriesByEventTop10t,aes(reorder(EVTYPE,(INJURIES)),
+                                    occurances,fill=type))
+g<-g+geom_bar(stat="Identity")
+# g<-g+geom_bar(aes(x=EVTYPE,y=FATALITIES),stat="Identity")
+g<-g+coord_flip()
+g<-g+ scale_fill_discrete(name="Type of Casualities")
+g<-g+theme( legend.position=c(.8,.5))
+# g<-g+geom_vline(xintercept = 1,lty=5,col="blue")
+# g<-g+geom_text(aes(x=2.5,y=7500,label="Line indicates 2 fatalities/injuries"))
+# g<-g+ggtitle(label="Most of the storms didn't cause Injuries/fatalities",
+#              subtitle = paste("Histogram of",len2,
+#                               "stroms which caused injuries or fatalities",
+#                               "(out of", len1,"storms)"))
+print(g)
+
+
+##---------------------------------------------------------------------------
+
+totalFatalities<-sum(InjuriesByEvent$FATALITIES)
+totalInjuries<-sum(InjuriesByEvent$INJURIES)
+
+InjuriesByEvent<-mutate(InjuriesByEvent,
+                        pctInjuries<-round(INJURIES/totalInjuries*100,2),
+                        pctFatalities<-round(FATALITIES/totalFatalities*100,2))
+
+
+names(InjuriesByEvent)[4]<-"pctInjuries"
+names(InjuriesByEvent)[5]<-"pctFatalities"
+
+
+InjuriesByEventTop10<-head(InjuriesByEvent,10)
+
+InjuriesByEventTop10<-select(InjuriesByEventTop10,-INJURIES,-FATALITIES)
+                            
+InjuriesByEventTop10Matrix<-as.matrix(t(InjuriesByEventTop10))
+
+barplot(as.matrix(t(InjuriesByEventTop10)),col=topo.colors(2))
+
+
+totalFatalities
+
+InjuriesByEventTop50
 
 dplyr::summarise_all()
 

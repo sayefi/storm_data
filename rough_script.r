@@ -166,6 +166,69 @@ plot(y=log(stormData$INJURIES+1+stormData$FATALITIES),x=stormData$EVTYPE)
 # Across the United States, which types of events have the greatest economic 
 # consequences?
 
+## Subsetting to events which had property damanage 
+stormDataProperty<-subset(stormData,PROPDMG>0)
+
+## Invalid PrpoertyDMG exp value 
+unique(stormDataProperty$PROPDMGEXP)
+
+## Subsetting Invalid PrpoertyDMG exp value  
+stormDataProperty<-stormDataProperty[stormDataProperty$PROPDMGEXP %in% 
+                                          c("M","B","K","0"),]
+
+## not significant - less than 0.05%
+nrow(invalidExp)/nrow(stormDataProperty)*100
+
+stormDataProperty<-select(stormDataProperty,EVTYPE,PROPDMG,PROPDMGEXP,CROPDMG,
+                                                       CROPDMGEXP)
+
+calculateLoss<-function(dmg,dmgexp="0"){
+     
+     exps<-c("0","K","M","B")
+     
+     expn<-0
+     
+     for(n in 1:length(exps)){
+          if(dmgexp[1]==exps[n])
+               expn<-(n-1)*3
+     }
+     
+     result<-dmg*10^expn
+     
+     result
+}
+
+calculateLoss(3)
+
+stormDataProperty[length(stormDataProperty$PROPDMGEXP)>1,]
+
+stormDataProperty$PROPDMGEXP[2]
+
+stormDataProperty<-mutate(stormDataProperty,
+                                  TotalDMG<-calculateLoss(PROPDMG,PROPDMGEXP) +
+                                       calculateLoss(CROPDMG,CROPDMGEXP))
+
+names(stormDataProperty)[6]<-"TotalEconomicLoss"
+
+boxplot(log10(stormDataProperty$TotalEconomicLoss)~stormDataProperty$EVTYPE)
+
+
+
+stormDataPropertyModified<-subset(stormDataProperty,
+                                  EVTYPE %in% InjuriesByEventTop10$EVTYPE)
+
+a<-InjuriesByEventTop10$EVTYPE
+
+
+boxplot(log10(stormDataPropertyModified$TotalEconomicLoss)
+        ~stormDataPropertyModified$EVTYPE)
+
+plot(log10(stormDataPropertyModified$TotalEconomicLoss)
+     ~stormDataPropertyModified$EVTYPE)
+
+exp0<-stormDataProperty[(stormDataProperty$PROPDMGEXP %in% c("1","2","3","0")),]
+
+
 plot(y=stormData$PROPDMG,x=stormData$EVTYPE)
 
 

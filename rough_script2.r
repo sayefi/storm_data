@@ -66,6 +66,27 @@ stormFatalitiesTop10[1,3]
 ## Tornado accounts for 37% Fatalities
 stormFatalitiesTop10[1,3]/totalFatalities
 
+stormFatalitiesTop10t<-transform(stormFatalitiesTop10,type='INJURIES',
+                                                  occurance=INJURIES)
+
+stormFatalitiesTop10t<-rbind(stormFatalitiesTop10t,
+                             transform(stormFatalitiesTop10,type='FATALITIES',
+                                       occurance=FATALITIES))
+
+g<-ggplot(stormFatalitiesTop10t,aes(x=reorder(EVTYPE,FATALITIES+INJURIES),
+                                   y=occurance,fill=type))
+g<-g+geom_bar(stat="Identity")
+# g<-g+geom_bar(aes(x=EVTYPE,y=FATALITIES),stat="Identity")
+g<-g+coord_flip()
+g<-g+ scale_fill_discrete(name="Type of Casualities")
+g<-g+theme( legend.position=c(.8,.5))
+# g<-g+geom_vline(xintercept = 1,lty=5,col="blue")
+# g<-g+geom_text(aes(x=2.5,y=7500,label="Line indicates 2 fatalities/injuries"))
+# g<-g+ggtitle(label="Most of the storms didn't cause Injuries/fatalities",
+#              subtitle = paste("Histogram of",len2,
+#                               "stroms which caused injuries or fatalities",
+#                               "(out of", len1,"storms)"))
+print(g)
 
 ## -[]requires Injuries and fatalities in different rows to create the plot
 
@@ -90,6 +111,20 @@ print(g)
 ## Top 10 type of storms for Economic loss
 stormEconomicLossTop10<-head(arrange(stormDataAggregate,desc(ECONOMICLOSS)),10)
 
+g<-ggplot(stormEconomicLossTop10,aes(reorder(EVTYPE,(ECONOMICLOSS)),
+                                     ECONOMICLOSS,fill="topo.colors(1,alpha=.2)"))
+g<-g+geom_bar(stat="Identity")
+# g<-g+geom_bar(aes(x=EVTYPE,y=FATALITIES),stat="Identity")
+g<-g+coord_flip()
+# g<-g+ scale_fill_discrete(name="Type of Casualities")
+# g<-g+theme( legend.position=c(.8,.5))
+# g<-g+geom_vline(xintercept = 1,lty=5,col="blue")
+# g<-g+geom_text(aes(x=2.5,y=7500,label="Line indicates 2 fatalities/injuries"))
+# g<-g+ggtitle(label="Most of the storms didn't cause Injuries/fatalities",
+#              subtitle = paste("Histogram of",len2,
+#                               "stroms which caused injuries or fatalities",
+#                               "(out of", len1,"storms)"))
+print(g)
 
 
 ## combined findings
@@ -114,11 +149,14 @@ g<-g+theme( legend.position="none")
 g<-g+geom_text(aes(x=log10(ECONOMICLOSS)+.1,
                    y=log10(FATALITIES+INJURIES)-.1,
                    label=EVTYPE,size=2.5))
-g<-g+ggtitle(label="Relative comparision of top 20 storm types in US",
+g<-g+ggtitle(label="Relative comparision of top 20 storm types in US (1950-2011)",
                  subtitle = paste(stormTop20[1,]$EVTYPE, "has higest impact in terms of injuries/fatalities and Economic loss"))
 g<-g+labs(x="Economic loss in Logarithmic scale (base 10)",
           y="Total injuries and Fatalities in Logarithmic scale (base 10)")
 print(g)
+
+dev.copy(pdf,"stormcomp.pdf")
+dev.off()
 
 
 subset(stormData,INJURIES==0 && FATALITIES==0 && PROPDMG ==0 && CORPDMG

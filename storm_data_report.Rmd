@@ -1,15 +1,43 @@
 ---
-title: "Storm Data Analysis"
+title: "Storm Data Analysis (1950-2011)"
 author: "Sayef Ishauqe"
-date: "September 18, 2017"
+date: "September 22, 2017"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
 ```
 
-## R Markdown
+
+## Synopsis
+
+Storm data provided by National weather services, US is the primary data source
+for this analysis. The storm data for the period of 1950-2011 has been summerized
+by storm categories to aggregate total economic loss, injuries and fatalities. 
+The type of storm that poses maximum risk of economic loss and casualities have 
+been identified. Also, a graphical summary of occurance of such events and their
+impact is provided in this report.
+
+## Data Processing
+
+- The data has been downloaded from National weather service website.
+
+```{r cache=TRUE}
+inputURL<-"https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
+
+temp<-tempfile()
+download.file(inputURL,temp)
+
+stormData <- read.csv(bzfile(temp))
+
+unlink(temp)
+
+```
+
+
 
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 

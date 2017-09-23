@@ -23,7 +23,7 @@ impact is provided in this report.
 
 ## Data Processing
 
-- The data has been downloaded from National weather service website.
+1. The data has been downloaded from National weather service website.
 
 ```{r cache=TRUE}
 inputURL<-"https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
@@ -37,22 +37,165 @@ unlink(temp)
 
 ```
 
+2. Unnecessary data elements have been removed from the dataset
+3. The Economic loss has been calcualted for ```PROPDMG``` and ```CORPDMG``` 
+     fields 
+     - ```PROPDMGEXP``` and ```CORPDMGEXP``` data fields are taken into 
+     considertion to calculate total economic loss (i.e. if ```PROPDMGEXP``` is 
+     "K", ```PROPDMG``` field has been multiplied by 1000)
+     - The ```EXP``` fields have been found to have some ambiguous values. As 
+     per documentation, B, M or K have been converted accordingly. 
+     - Numbers have been converted as a ```10^n```. Other values i.e. -,? are 
+     ignored. Such occurance were not significant.
+     - A function has been created to calculate and clean-up
+
+```{r}
+stormDataAggregate<-select(stormData, EVTYPE,INJURIES,FATALITIES,
+                           PROPDMG,PROPDMGEXP, CROPDMG,CROPDMGEXP )
+
+summary(stormDataAggregate)
+
+unique(stormDataAggregate$PROPDMGEXP)
+
+calculateLoss<-function(dmg,dmgexp=""){
+     
+     if (dmgexp[1]=="K"||dmgexp[1]=="k") result<-dmg*10^3
+     else if (dmgexp[1]=="M"||dmgexp[1]=="m") result<-dmg*10^6
+     else if (dmgexp[1]=="B") result<-dmg*10*9
+     else if (is.numeric(dmgexp[1])) result<-dmg*10^as.numeric(dmgexp)
+     else result <-dmg
+     
+     
+     result
+}
 
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+stormDataAggregate<-mutate(stormDataAggregate,
+                           ECONOMICLOSS<-calculateLoss(PROPDMG,PROPDMGEXP)+
+                                calculateLoss(CROPDMG,CROPDMGEXP))
 
-```{r cars}
-summary(cars)
+
+names(stormDataAggregate)[8]<-"ECONOMICLOSS"
+
 ```
 
-## Including Plots
+4. Storm data were summerized by type and total number of injuries, fatalities,
+total economic loss and count of occurance have been calculated.
 
-You can also embed plots, for example:
+```{r}
+stormDataAggregate<-mutate(stormDataAggregate, EVENTCOUNT=1)
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+
+stormDataAggregate<-group_by(stormDataAggregate,EVTYPE)
+
+stormDataAggregate<-summarise(stormDataAggregate,sum(INJURIES),sum(FATALITIES),
+                         sum(ECONOMICLOSS),sum(EVENTCOUNT))
+
+names(stormDataAggregate)<-c("EVTYPE", "INJURIES", "FATALITIES",
+                         "ECONOMICLOSS", "EVENTCOUNT")
+
+stormDataAggregate<-arrange(stormDataAggregate,desc(FATALITIES),
+                            desc(ECONOMICLOSS))
+
+head(stormDataAggregate)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+5. From summerized storm data, storm with highest fatalities, injuries andd 
+economic loss have been reported.
+
+
+## Results
+
+### Impact on population health
+
+```{r}
+stormFatalitiesTop10<-head(stormDataAggregate,10)
+
+
+totalFatalities<-sum(stormDataAggregate$FATALITIES)
+
+stType<-stormFatalitiesTop10[1,1]
+
+pctFatalities<-round(stormFatalitiesTop10[1,3]/totalFatalities*100,0)
+
+```
+
+In the period 1950-2011, ```r stType``` accounts for ```r pctFatalities``` 
+percent fatalities
+
+```{r}
+stormFatalitiesTop10t<-transform(stormFatalitiesTop10,type='INJURIES',
+                                                  occurance=INJURIES)
+
+stormFatalitiesTop10t<-rbind(stormFatalitiesTop10t,
+                             transform(stormFatalitiesTop10,type='FATALITIES',
+                                       occurance=FATALITIES))
+
+g<-ggplot(stormFatalitiesTop10t,aes(x=reorder(EVTYPE,FATALITIES+INJURIES),
+                                   y=occurance,fill=type))
+g<-g+geom_bar(stat="Identity")
+g<-g+coord_flip()
+g<-g+ scale_fill_discrete(name="Type of Casualities")
+g<-g+theme( legend.position=c(.8,.5))
+g<-g+labs(x="Number of Casualities", y="Type of Storms")
+g<-g+ggtitle(label="Top 10 storm types in US in terms of impact on population health")
+print(g)
+```
+
+
+### Economic consequences
+
+```{r}
+
+stormEconomicLossTop10<-head(arrange(stormDataAggregate,desc(ECONOMICLOSS)),10)
+
+
+
+totalEconomicLoss<-sum(stormDataAggregate$ECONOMICLOSS)
+
+stType<-stormEconomicLossTop10[1,1]
+pctLoss<-round(stormFatalitiesTop10[1,4]/totalEconomicLoss*100,0)
+
+```
+
+In the period 1950-2011,```r stType``` accounts for ```r pctLoss``` percent 
+economic impact
+
+
+```{r}
+
+g<-ggplot(stormEconomicLossTop10,aes(reorder(EVTYPE,(ECONOMICLOSS)),
+                                     ECONOMICLOSS,fill="topo.colors(1,alpha=.2)"))
+g<-g+geom_bar(stat="Identity")
+g<-g+coord_flip()
+g<-g+theme( legend.position="none")
+g<-g+labs(x="Economic Loss", y="Type of Storms")
+g<-g+ggtitle(label="Top 10 storm types in US in terms of Economic impact") 
+print(g)
+
+```
+
+### Combined result
+In both considerations, Tornado has been the most devastating event in this 
+period. However, there are a number of storm types which caused similar economic 
+impact (at least in logarithmic scale). But, there impact on public health has 
+been considerably less.
+
+```{r}
+stormTop20<-head(stormDataAggregate,20)
+
+g<-ggplot(stormTop20,aes(x=log10(ECONOMICLOSS),
+                                  y=log10(FATALITIES+INJURIES),
+                    size=log10(EVENTCOUNT),col=factor(EVTYPE),alpha=1))
+g<-g+geom_point(pch=19)
+g<-g+theme( legend.position="none")
+g<-g+geom_text(aes(x=log10(ECONOMICLOSS)+.1,
+                   y=log10(FATALITIES+INJURIES)-.1,
+                   label=EVTYPE,size=2.5))
+g<-g+ggtitle(label="Relative comparision of top 20 storm types in US (1950-2011)",
+                 subtitle = paste(stormTop20[1,]$EVTYPE, "has higest impact in terms of injuries/fatalities and Economic loss"))
+g<-g+labs(x="Economic loss in Logarithmic scale (base 10)",
+          y="Total injuries and Fatalities in Logarithmic scale (base 10)")
+print(g)
+```

@@ -82,10 +82,7 @@ g<-g+ scale_fill_discrete(name="Type of Casualities")
 g<-g+theme( legend.position=c(.8,.5))
 # g<-g+geom_vline(xintercept = 1,lty=5,col="blue")
 # g<-g+geom_text(aes(x=2.5,y=7500,label="Line indicates 2 fatalities/injuries"))
-# g<-g+ggtitle(label="Most of the storms didn't cause Injuries/fatalities",
-#              subtitle = paste("Histogram of",len2,
-#                               "stroms which caused injuries or fatalities",
-#                               "(out of", len1,"storms)"))
+g<-g+ggtitle(label="Top 10 storm types in US in terms of impact on population health")
 print(g)
 
 ## -[]requires Injuries and fatalities in different rows to create the plot
@@ -117,13 +114,11 @@ g<-g+geom_bar(stat="Identity")
 # g<-g+geom_bar(aes(x=EVTYPE,y=FATALITIES),stat="Identity")
 g<-g+coord_flip()
 # g<-g+ scale_fill_discrete(name="Type of Casualities")
-# g<-g+theme( legend.position=c(.8,.5))
+g<-g+theme( legend.position="none")
+g<-g+labs(x="Economic Loss", y="Type of Storms")
 # g<-g+geom_vline(xintercept = 1,lty=5,col="blue")
 # g<-g+geom_text(aes(x=2.5,y=7500,label="Line indicates 2 fatalities/injuries"))
-# g<-g+ggtitle(label="Most of the storms didn't cause Injuries/fatalities",
-#              subtitle = paste("Histogram of",len2,
-#                               "stroms which caused injuries or fatalities",
-#                               "(out of", len1,"storms)"))
+g<-g+ggtitle(label="Top 10 storm types in US in terms of Economic impact") 
 print(g)
 
 

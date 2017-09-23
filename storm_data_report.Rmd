@@ -1,5 +1,5 @@
 ---
-title: "Storm Data Analysis (1950-2011)"
+title: "Economic and public health impact of severe weather events in the US (1950-2011)"
 author: "Sayef Ishauqe"
 date: "September 22, 2017"
 output: html_document

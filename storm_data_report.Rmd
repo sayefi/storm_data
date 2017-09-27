@@ -60,15 +60,15 @@ unique(stormDataAggregate$PROPDMGEXP)
 calculateLoss<-function(dmg,dmgexp=""){
      
      if (dmgexp[1]=="K"||dmgexp[1]=="k") result<-dmg*10^3
+     else if (dmgexp[1]=="H"||dmgexp[1]=="h") result<-dmg*10^2
      else if (dmgexp[1]=="M"||dmgexp[1]=="m") result<-dmg*10^6
-     else if (dmgexp[1]=="B") result<-dmg*10*9
+     else if (dmgexp[1]=="B") result<-dmg*10^9
      else if (is.numeric(dmgexp[1])) result<-dmg*10^as.numeric(dmgexp)
      else result <-dmg
      
      
      result
 }
-
 
 
 stormDataAggregate<-mutate(stormDataAggregate,
@@ -150,7 +150,7 @@ print(g)
 
 stormEconomicLossTop10<-head(arrange(stormDataAggregate,desc(ECONOMICLOSS)),10)
 
-
+stormEconomicLossTop10
 
 totalEconomicLoss<-sum(stormDataAggregate$ECONOMICLOSS)
 
